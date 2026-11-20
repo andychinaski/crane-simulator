@@ -54,21 +54,33 @@ h2 { line-height: 1.15; }
   background: #53616d;
 }
 .viewport canvas { display: block; width: 100%; height: 100%; }
-.cargo-status {
+.scene-actions {
   position: absolute;
-  top: 12px;
-  left: 12px;
-  display: grid;
-  gap: 5px;
-  max-width: calc(100% - 24px);
-  padding: 10px 14px;
-  border: 1px solid #b7c9d445;
-  border-radius: 7px;
-  background: #1c232be8;
-  pointer-events: none;
+  z-index: 2;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  gap: 6px;
 }
-.cargo-status strong { font-size: clamp(16px, 1.35vw, 22px); }
-.cargo-status span { font-size: clamp(14px, 1.13vw, 18px); line-height: 1.3; color: #e4e7eb; }
+.scene-actions button {
+  min-height: 38px;
+  padding-inline: 10px;
+  box-shadow: 0 2px 8px #141a2066;
+  font-size: 14px;
+}
+.scene-actions button span {
+  display: block;
+  font-size: 24px;
+  line-height: 1;
+}
+.cargo-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 3px 8px;
+}
+.cargo-status strong { font-size: clamp(15px, 1.15vw, 19px); }
+.cargo-status span { font-size: 14px; line-height: 1.3; color: #e4e7eb; }
 .cargo-status [data-state="PLACED"], .cargo-status [data-hint="ready"] { color: #8de6ce; }
 .cargo-status [data-hint="airborne"] { color: #ffcc89; }
 .scene-error {
@@ -86,13 +98,16 @@ h2 { line-height: 1.15; }
   grid-area: crane;
   display: flex;
   flex-direction: column;
-  padding: clamp(10px, 1.3dvh, 15px) clamp(13px, 1.45vw, 25px) 0;
+  min-height: 0;
+  padding: clamp(10px, 1.3dvh, 15px) clamp(13px, 1.45vw, 25px);
+  overflow-y: auto;
+  scrollbar-width: thin;
 }
 .crane-panel h2 {
   padding-bottom: clamp(9px, 1.6dvh, 16px);
   font-size: clamp(21px, 2.02vw, 34px);
 }
-.crane-sliders { flex: 1; display: grid; grid-template-rows: repeat(7, 1fr); }
+.crane-sliders { flex: 1; display: grid; grid-template-rows: repeat(7, minmax(50px, 1fr)); }
 .crane-sliders .control {
   border-top: 1px solid var(--border);
   display: grid;
@@ -149,16 +164,50 @@ output { white-space: nowrap; font-variant-numeric: tabular-nums; }
   box-shadow: 0 1px 3px #12161a;
 }
 
+.scenario-status {
+  display: grid;
+  gap: 4px;
+  padding-top: 8px;
+}
 .stage-status {
-  margin: clamp(6px, 1.15dvh, 11px) 0;
   color: #c1c6cb;
   font-size: clamp(12px, .9vw, 15px);
 }
-.actions {
+.guide-card {
+  flex: none;
   display: grid;
-  grid-template-columns: 1.55fr 1fr;
-  gap: clamp(9px, 1.1vw, 18px);
-  margin-bottom: clamp(16px, 5.3dvh, 50px);
+  gap: 5px;
+  margin-top: 9px;
+  padding: 9px 11px;
+  border: 1px solid #599a81;
+  border-radius: 9px;
+  background: #163c32c4;
+  box-shadow: 0 0 13px #69d9ba19 inset;
+  font-size: 14px;
+  line-height: 1.35;
+}
+.guide-card h3 {
+  margin: 0;
+  color: #b1f1d9;
+  font-size: 14px;
+}
+.guide-card strong { color: #dcffeb; white-space: nowrap; }
+.guide-feedback { color: #c5e3d7; }
+.guide-feedback[data-complete="true"] { color: #9aefc9; font-weight: 700; }
+.guide-actions { display: flex; flex-wrap: wrap; gap: 6px; justify-content: space-between; }
+.guide-card button {
+  min-height: 35px;
+  width: fit-content;
+  padding: 3px 8px;
+  font-size: 13px;
+}
+.guide-next { background: #9aefc9; color: #143528; }
+.guide-next:disabled { background: #314a42; color: #c3d8cf; }
+.crane-sliders .guide-control {
+  background: #67dcb51c;
+  border-radius: 5px;
+  box-shadow: 0 0 0 1px #84e9c6 inset;
+  padding-inline: 7px;
 }
 button {
   min-height: 42px;
@@ -176,12 +225,7 @@ button:focus-visible { outline: 2px solid #ffbd59; outline-offset: 3px; }
   border-color: #777d82;
   font-size: clamp(15px, 1.3vw, 22px);
 }
-.actions button {
-  min-height: clamp(44px, 6.8dvh, 64px);
-  padding-inline: 7px;
-  font-size: clamp(16px, 1.5vw, 25px);
-}
-.actions button:disabled { opacity: 0.65; }
+button:disabled { opacity: 0.72; }
 .demo { color: #171009; background: #f79a15; border-color: #f79a15; }
 .stop { background: #492d2c; border-color: #f04937; }
 
@@ -225,6 +269,21 @@ dialog p { margin: 14px 0; line-height: 1.5; }
 .help-actions { display: flex; flex-wrap: wrap; gap: 10px; }
 .help-actions button { font-size: 16px; padding-inline: 12px; }
 
+.scenario-dialog { width: min(510px, calc(100% - 24px)); }
+.scenario-dialog::backdrop { background: #0a0e14ac; backdrop-filter: blur(2px); }
+.mode-actions {
+  display: grid;
+  grid-template-columns: 1fr 1.3fr;
+  align-items: start;
+  gap: 10px;
+  margin-top: 16px;
+}
+.mode-actions button { width: 100%; font-size: 16px; padding-inline: 8px; }
+.manual-option { display: grid; gap: 7px; }
+.manual-option label { display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; }
+.manual-option input { width: 17px; height: 17px; accent-color: var(--amber); }
+.mode-cancel { margin-top: 14px; font-size: 14px; }
+
 @media (max-width: 1000px) {
   .workspace {
     height: auto;
@@ -234,11 +293,12 @@ dialog p { margin: 14px 0; line-height: 1.5; }
   }
   .crane-panel { padding-bottom: 16px; }
   .crane-sliders .control { min-height: 61px; }
-  .actions { margin-bottom: 0; }
   .camera-panel { min-height: 68px; }
 }
 
 @media (max-width: 620px) {
+  .mode-actions { grid-template-columns: 1fr; }
+  .crane-panel { overflow: visible; }
   .camera-panel {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     padding: 10px 12px;

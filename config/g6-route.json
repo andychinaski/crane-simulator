@@ -1,0 +1,100 @@
+{
+  "$schemaComment": "G6 instructional route, NOT a second motion engine. Validate numeric targets against config/controls.json and evidence/G3/README.md; guide never commands mechanisms. Actual pose and CargoController decide completion.",
+  "version": "G6-1",
+  "entry": {
+    "resetToKnownInitialPose": true,
+    "guidedDefault": true,
+    "requiresUserNext": true,
+    "startAfter": "G5 completed or skipped"
+  },
+  "steps": [
+    {
+      "id": "lower-to-handle",
+      "controlId": "ropeLength",
+      "target": 5.1,
+      "unit": "m",
+      "instruction": "Опусти захват до ручки ящика: 5,1 м",
+      "condition": "actualNear AND cargoState=GROUND AND cargoHint=ready"
+    },
+    {
+      "id": "close-gripper",
+      "controlId": "gripperOpen",
+      "target": 0,
+      "unit": "percent",
+      "instruction": "Закрой захват до 0% и дождись закрепления ящика",
+      "condition": "actualNear AND cargoState=ATTACHED"
+    },
+    {
+      "id": "lift-cargo",
+      "controlId": "ropeLength",
+      "target": 3.6,
+      "unit": "m",
+      "instruction": "Подними ящик: трос 3,6 м",
+      "condition": "actualNear AND cargoState=ATTACHED AND cargoLifted"
+    },
+    {
+      "id": "rotate-platform",
+      "controlId": "platformYaw",
+      "target": 54,
+      "unit": "deg",
+      "instruction": "Поверни платформу до 54°",
+      "condition": "actualNear AND cargoState=ATTACHED"
+    },
+    {
+      "id": "pitch-boom",
+      "controlId": "boomPitch",
+      "target": 28,
+      "unit": "deg",
+      "instruction": "Установи наклон стрелы 28°",
+      "condition": "actualNear AND cargoState=ATTACHED"
+    },
+    {
+      "id": "extend-boom",
+      "controlId": "boomLength",
+      "target": 7.1,
+      "unit": "m",
+      "instruction": "Выдвини стрелу до 7,1 м",
+      "condition": "actualNear AND cargoState=ATTACHED"
+    },
+    {
+      "id": "align-gripper",
+      "controlId": "gripperYaw",
+      "target": 0,
+      "unit": "deg",
+      "instruction": "Разверни захват до 0°",
+      "condition": "actualNear AND cargoState=ATTACHED"
+    },
+    {
+      "id": "lower-to-platform",
+      "controlId": "ropeLength",
+      "target": null,
+      "unit": "m",
+      "instruction": "Опусти груз до контакта с площадкой",
+      "condition": "cargoState=ATTACHED AND cargoHint=landed AND currentDynamicRopeLimitReached",
+      "note": "The physical limit is dynamic (around 4.15m in the accepted G3 pose), never hardcode 4.15 as mandatory target."
+    },
+    {
+      "id": "release-cargo",
+      "controlId": "gripperOpen",
+      "target": 80,
+      "unit": "percent",
+      "instruction": "Раскрой захват до 80% и оставь ящик на площадке",
+      "condition": "actualNear AND cargoState=PLACED AND cargoInsideLandingArea"
+    },
+    {
+      "id": "retract-empty-rope",
+      "controlId": "ropeLength",
+      "target": 3,
+      "unit": "m",
+      "instruction": "Подними пустой захват: укороти трос до 3 м",
+      "condition": "actualNear AND cargoState=PLACED"
+    }
+  ],
+  "validation": {
+    "sourceOfTruth": "simulator actual pose and cargo state, never UI target",
+    "tolerancePolicy": "derive from controls.json step; document explicit epsilons",
+    "onRevertBeforeNext": "revoke completed state and disable Next",
+    "onDeviationAfterNext": "validate context-dependent invariants; no permanent lock on controls expected to change",
+    "autoAdvance": false
+  }
+}

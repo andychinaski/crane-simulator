@@ -47,8 +47,8 @@ for (const [width, height] of [[1672, 941], [1440, 900], [1280, 720]]) {
     expect(sceneBox.x + sceneBox.width).toBeLessThan(craneBox.x)
     expect(sceneBox.y + sceneBox.height).toBeLessThan(cameraBox.y)
     expect(cameraBox.y + cameraBox.height).toBeLessThan(height)
-    await expect(page.getByRole('button', { name: 'Демонстрация' })).toBeInViewport()
-    await expect(page.getByRole('button', { name: 'Стоп', exact: true })).toBeInViewport()
+    await expect(scene.getByRole('button', { name: 'Выбрать режим' })).toBeInViewport()
+    await expect(scene.getByRole('button', { name: 'Сбросить сценарий' })).toBeInViewport()
     await expect(page.getByRole('button', { name: 'Сбросить вид' })).toBeInViewport()
     expect(errors).toEqual([])
 
@@ -82,7 +82,6 @@ test('keeps both panels usable on a narrow screen', async ({ page }) => {
   const crane = (await page.getByRole('complementary', { name: 'Управление краном' }).boundingBox())!
   expect(scene.y + scene.height).toBeLessThan(camera.y)
   expect(camera.y + camera.height).toBeLessThan(crane.y)
-  await page.getByRole('button', { name: 'Стоп', exact: true }).scrollIntoViewIfNeeded()
-  await expect(page.getByRole('button', { name: 'Стоп', exact: true })).toBeInViewport()
+  await expect(page.getByRole('button', { name: 'Выбрать режим' })).toBeInViewport()
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(390)
 })

@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
-import { canvas, setSlider, status, waitForCrane } from './controls'
+import { canvas, chooseDemo, chooseManual, modeDialog, setSlider, status, waitForCrane } from './controls'
 
 const tour = (page: Page) => page.getByTestId('onboarding')
 const button = (page: Page, name: string) => tour(page).getByRole('button', { name, exact: true })
@@ -22,7 +22,7 @@ async function clickCenter(page: Page, locator: Locator) {
 
 test.use({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce' })
 
-test('G5 blocks simulator input and shows the welcome card again after skip or Escape', async ({ page }) => {
+test('G5 blocks simulator input and hands off to mode selection after skip or Escape', async ({ page }) => {
   await page.goto('/')
   await expect(canvas(page)).toBeVisible()
   await expect(tour(page).getByRole('button')).toHaveCount(2)
@@ -44,11 +44,15 @@ test('G5 blocks simulator input and shows the welcome card again after skip or E
   await expect(status(page)).toHaveAttribute('data-demo', 'idle')
   await skip.click()
   await expect(tour(page)).toBeHidden()
-  await expect(help(page)).toBeFocused()
+  await expect(modeDialog(page)).toBeVisible()
+  await clickCenter(page, pitch)
+  await expect(pitch).toHaveValue('42')
+  await chooseManual(page)
   await setSlider(page, 'boomPitch', 50)
   await page.reload()
   await expect(tour(page).getByRole('button')).toHaveCount(2)
   await button(page, 'Пропустить обучение').click()
+  await chooseManual(page)
 
   await restartFromHelp(page)
   await clickCenter(page, zoom)
@@ -73,6 +77,8 @@ test('G5 blocks simulator input and shows the welcome card again after skip or E
   await expect(zoom).not.toHaveValue('100')
   await page.reload()
   await expect(button(page, 'Пройти обучение')).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(modeDialog(page)).toBeVisible()
 })
 
 test('G5 keyboard navigation, finish, replay and skip preserve the stopped crane with cargo', async ({ page }) => {
@@ -93,12 +99,13 @@ test('G5 keyboard navigation, finish, replay and skip preserve the stopped crane
   await button(page, 'Далее').click()
   await button(page, 'Завершить').click()
   await expect(tour(page)).toBeHidden()
+  await expect(modeDialog(page)).toBeVisible()
   await page.reload()
   await expect(button(page, 'Пройти обучение')).toBeVisible()
   await button(page, 'Пропустить обучение').click()
 
+  await chooseDemo(page)
   await setSlider(page, 'cameraZoom', 125)
-  await page.getByRole('button', { name: 'Демонстрация', exact: true }).click()
   await expect(status(page)).toHaveAttribute('data-demo', 'transfer', { timeout: 20_000 })
   await page.getByRole('button', { name: 'Стоп', exact: true }).click()
   await waitForCrane(page)
@@ -113,6 +120,7 @@ test('G5 keyboard navigation, finish, replay and skip preserve the stopped crane
   await clickCenter(page, page.locator('#platformYaw'))
   await button(page, 'Пропустить').click()
   await expect(tour(page)).toBeHidden()
+  await expect(modeDialog(page)).toBeHidden()
   await expect(status(page)).toHaveAttribute('data-demo', 'stopped')
   await expect(page.locator('#cargo-status')).toHaveAttribute('data-state', 'ATTACHED')
   expect(await controls.evaluateAll(inputs => inputs.map(input => (input as HTMLInputElement).value)))
