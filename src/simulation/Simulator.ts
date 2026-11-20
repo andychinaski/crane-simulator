@@ -9,11 +9,21 @@ import { buildWorld } from './SceneWorld'
 export type RopeContact = 'floor' | 'lid' | 'side' | null
 const crateApproachAxes = ['platformYaw', 'boomPitch', 'boomLength', 'gripperOpen'] as const
 
+export interface ScenarioSnapshot {
+  readonly actual: Readonly<Record<CraneControl, number>>
+  readonly moving: boolean
+  readonly ropeMaximum: number
+  readonly contact: RopeContact
+  readonly cargoState: CargoState
+  readonly cargoHint: CargoHint
+  readonly cargoLifted: boolean
+  readonly cargoInsideLandingArea: boolean
+}
+
 interface SceneEvents {
   onContextChange: (lost: boolean) => void
   onCameraChange: (values: CameraValues) => void
-  onMotionChange: (moving: boolean, ropeMaximum: number, contact: RopeContact) => void
-  onCargoChange: (state: CargoState, hint: CargoHint) => void
+  onScenarioChange: (snapshot: ScenarioSnapshot) => void
   onCraneTargetChange: (id: CraneControl, value: number) => void
   onDemoChange: (phase: DemoPhase, running: boolean, pausing: boolean) => void
 }
@@ -82,6 +92,33 @@ export function mountScene(viewport: HTMLElement, events: SceneEvents) {
     events.onDemoChange(demo.phase, demo.running, demo.pausing)
   }
 
+  function publishScenario() {
+    events.onScenarioChange({
+      actual: { ...motion.actual },
+      moving: motion.moving,
+      ropeMaximum: crane.maxRopeLength,
+      contact: sideBlocked ? 'side' : crane.crateLimited ? 'lid' : crane.floorLimited ? 'floor' : null,
+      cargoState: cargo.state,
+      cargoHint: cargo.hint,
+      cargoLifted: cargo.lifted,
+      cargoInsideLandingArea: cargo.isInDeliveryArea(),
+    })
+  }
+
+  function resetPose() {
+    sideBlocked = false
+    motion.resetPose()
+    cargo.reset()
+    positionCrane()
+    limitRope()
+    cargo.update(crane.model.gripper, motion.actual.gripperOpen, motion.target.gripperOpen)
+    renderer.shadowMap.needsUpdate = true
+    publishValues(motion.target)
+    publishScenario()
+    previous = undefined
+    requestRender()
+  }
+
   function render(time: number) {
     frame = undefined
     if (renderer.getContext().isContextLost()) {
@@ -124,9 +161,7 @@ export function mountScene(viewport: HTMLElement, events: SceneEvents) {
     demo.update({ moving: motion.moving, cargo: cargo.state, hint: cargo.hint, ropeMaximum: crane.maxRopeLength }, time)
     if (wasDemonstrating) publishValues(motion.actual)
     publishDemo()
-    events.onCargoChange(cargo.state, cargo.hint)
-    const contact = sideBlocked ? 'side' : crane.crateLimited ? 'lid' : crane.floorLimited ? 'floor' : null
-    events.onMotionChange(motion.moving, crane.maxRopeLength, contact)
+    publishScenario()
     previous = motion.moving ? time : undefined
     if (motion.moving || demo.running) requestRender()
 
@@ -183,22 +218,15 @@ export function mountScene(viewport: HTMLElement, events: SceneEvents) {
       if (demo.running) return motion.target[id]
       demo.phase = 'idle'
       const accepted = setTarget(id, value)
+      publishScenario()
       requestRender()
       return accepted
     },
     startDemo() {
       if (demo.running) return
-      motion.resetPose()
-      cargo.reset()
-      positionCrane()
-      limitRope()
-      cargo.update(crane.model.gripper, motion.actual.gripperOpen, motion.target.gripperOpen)
-      renderer.shadowMap.needsUpdate = true
-      publishValues(motion.target)
-      previous = undefined
+      resetPose()
       demo.start()
       publishDemo()
-      requestRender()
     },
     stopDemo() {
       if (!demo.running) return
@@ -207,7 +235,18 @@ export function mountScene(viewport: HTMLElement, events: SceneEvents) {
       previous = undefined
       publishValues(motion.target)
       publishDemo()
+      publishScenario()
       requestRender()
+    },
+    resetScenario() {
+      demo.stop()
+      demo.phase = 'idle'
+      resetPose()
+      publishDemo()
+    },
+    get scenarioChanged() {
+      return demo.running || !cargo.atStart || craneControls.some(({ id, initial }) =>
+        id !== 'movementSpeed' && (motion.actual[id] !== initial || motion.target[id] !== initial))
     },
     setCamera(id: CameraControl, value: number) { cameraController.set(id, value) },
     resetCamera: cameraController.reset,

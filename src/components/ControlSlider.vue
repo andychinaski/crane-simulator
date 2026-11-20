@@ -2,7 +2,14 @@
 import { computed } from 'vue'
 import { formatValue, type ControlDefinition } from '../state/controls'
 
-const props = defineProps<{ control: ControlDefinition; value: number; limit?: number; disabled?: boolean; continuous?: boolean }>()
+const props = defineProps<{
+  control: ControlDefinition
+  value: number
+  limit?: number
+  disabled?: boolean
+  continuous?: boolean
+  describedBy?: string
+}>()
 const emit = defineEmits<{ change: [value: number] }>()
 const valueText = computed(() => formatValue(props.control,
   props.limit === undefined && !props.continuous ? props.value : Number(props.value.toFixed(2))))
@@ -58,6 +65,7 @@ function onKey(event: KeyboardEvent) {
       :style="{ '--fill': fill + '%' }"
       :aria-valuemax="limit"
       :aria-valuetext="valueText"
+      :aria-describedby="describedBy"
       :disabled="disabled"
       @input="onInput"
       @keydown="onKey"

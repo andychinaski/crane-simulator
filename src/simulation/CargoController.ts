@@ -42,6 +42,15 @@ export class CargoController {
     return this.state === 'ATTACHED' ? -this.holdOffset.y : 0
   }
 
+  get lifted() {
+    return this.state === 'ATTACHED' && this.crate.position.y > floorTolerance
+  }
+
+  get atStart() {
+    return this.state === 'GROUND' && this.crate.position.equals(this.startPosition) &&
+      this.crate.rotation.y === this.startYaw
+  }
+
   surfaceUnderGripper(anchor: Vector3, radius: number) {
     if (this.state === 'ATTACHED') return null
     const x = anchor.x - this.crate.position.x
@@ -71,7 +80,7 @@ export class CargoController {
     return yawError <= yawTolerance ? 'ready' : 'angle'
   }
 
-  private isInDeliveryArea() {
+  isInDeliveryArea() {
     const { x, z } = this.crate.position
     const cos = Math.abs(Math.cos(this.crate.rotation.y))
     const sin = Math.abs(Math.sin(this.crate.rotation.y))

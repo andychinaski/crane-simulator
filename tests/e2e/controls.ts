@@ -2,10 +2,27 @@ import { expect, type Page } from '@playwright/test'
 
 export const canvas = (page: Page) => page.locator('canvas[data-ready=true]')
 export const status = (page: Page) => page.locator('#stage-status')
+export const modeDialog = (page: Page) => page.locator('.scenario-dialog')
 
-export async function openSimulator(page: Page) {
+export async function skipOnboarding(page: Page) {
   await page.goto('/')
   await page.getByRole('button', { name: 'Пропустить обучение', exact: true }).click()
+}
+
+export async function chooseManual(page: Page, guided = false) {
+  const dialog = modeDialog(page)
+  await dialog.getByRole('checkbox', { name: 'С подсказками' }).setChecked(guided)
+  await dialog.getByRole('button', { name: 'Попробовать вручную' }).click()
+}
+
+export async function openSimulator(page: Page) {
+  await skipOnboarding(page)
+  await chooseManual(page)
+}
+
+export async function chooseDemo(page: Page, confirmReset = false) {
+  await modeDialog(page).getByRole('button', { name: 'Демонстрация', exact: true }).click()
+  if (confirmReset) await modeDialog(page).getByRole('button', { name: 'Сбросить и продолжить' }).click()
 }
 
 export async function setSlider(page: Page, id: string, value: number) {
