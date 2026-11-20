@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
-import { canvas, lowerRopeToLimit, setSlider, status, waitForCrane } from './controls'
+import { canvas, lowerRopeToLimit, openSimulator, setSlider, status, waitForCrane } from './controls'
 
 const cargoState = (page: Page) => page.locator('#cargo-status')
 const cargoHint = (page: Page) => page.locator('#cargo-hint')
@@ -10,7 +10,7 @@ async function capture(page: Page, name: string) {
 
 test.beforeEach(async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 })
-  await page.goto('/')
+  await openSimulator(page)
   await expect(canvas(page)).toBeVisible()
   await setSlider(page, 'movementSpeed', 100)
 })

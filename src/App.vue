@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, shallowRef } from 'vue'
 import ControlSlider from './components/ControlSlider.vue'
+import OnboardingTour from './components/OnboardingTour.vue'
 import {
   cameraControls, controlDefinition, craneControls, formatValue, initialValues, type CraneControl,
 } from './state/controls'
@@ -9,7 +10,11 @@ import type { DemoPhase } from './simulation/DemoSequence'
 import { mountScene, type RopeContact } from './simulation/Simulator'
 
 const viewport = ref<HTMLElement>()
+const cameraPanel = ref<HTMLElement>()
+const cranePanel = ref<HTMLElement>()
 const help = ref<HTMLDialogElement>()
+const helpButton = ref<HTMLButtonElement>()
+const onboarding = ref<InstanceType<typeof OnboardingTour>>()
 const sceneError = ref('')
 const simulator = shallowRef<ReturnType<typeof mountScene>>()
 const craneTarget = ref(initialValues(craneControls))
@@ -77,6 +82,11 @@ function changeCrane(id: CraneControl, value: number) {
   if (simulator.value) craneTarget.value[id] = simulator.value.setCraneTarget(id, value)
 }
 
+function restartOnboarding() {
+  help.value?.close()
+  onboarding.value?.restart()
+}
+
 onMounted(() => {
   if (!viewport.value) return
   try {
@@ -117,7 +127,7 @@ onUnmounted(() => simulator.value?.dispose())
 <template>
   <header class="app-header">
     <h1>Симулятор крана</h1>
-    <button class="secondary" type="button" @click="help?.showModal()">Справка</button>
+    <button ref="helpButton" class="secondary" type="button" @click="help?.showModal()">Справка</button>
   </header>
   <main class="workspace">
     <section ref="viewport" class="viewport panel" aria-label="Трёхмерная сцена">
@@ -127,7 +137,7 @@ onUnmounted(() => simulator.value?.dispose())
       </div>
       <div v-if="sceneError" class="scene-error" role="alert">{{ sceneError }}</div>
     </section>
-    <aside class="crane-panel panel" aria-labelledby="crane-title">
+    <aside ref="cranePanel" class="crane-panel panel" aria-labelledby="crane-title">
       <h2 id="crane-title">Управление краном</h2>
       <div class="crane-sliders">
         <ControlSlider
@@ -147,7 +157,7 @@ onUnmounted(() => simulator.value?.dispose())
         <button class="stop" type="button" :disabled="!demoRunning" @click="simulator?.stopDemo()">Стоп</button>
       </div>
     </aside>
-    <section class="camera-panel panel" aria-labelledby="camera-title">
+    <section ref="cameraPanel" class="camera-panel panel" aria-labelledby="camera-title">
       <h2 id="camera-title">Камера</h2>
       <ControlSlider
         v-for="control in cameraControls" :key="control.id" :control="control"
@@ -162,6 +172,11 @@ onUnmounted(() => simulator.value?.dispose())
     <p>«Горизонталь» и «Вертикаль» смещают камеру вдоль кадра. «Масштаб» приближает или отдаляет сцену, «Обход сцены» поворачивает камеру. Левой кнопкой мыши вращайте вид, правой смещайте, колесом меняйте масштаб. «Сбросить вид» возвращает исходный ракурс.</p>
     <p>Подведите открытый захват к ручке ящика. При подсказке «Готов к захвату» закройте лепестки. Поднимите ящик, перенесите к бирюзовой площадке и опустите на пол. Затем откройте захват. Засчитывается укладка, при которой ящик целиком внутри контура.</p>
     <p>«Демонстрация» возвращает кран и ящик в начальное положение и выполняет перенос с выбранной скоростью. Камерой можно управлять весь цикл. «Стоп» сохраняет текущую позу и возвращает ручное управление.</p>
-    <form method="dialog"><button class="secondary" autofocus>Закрыть</button></form>
+    <form method="dialog" class="help-actions">
+      <button class="secondary" type="button" @click="restartOnboarding">Пройти обучение ещё раз</button>
+      <button class="secondary" autofocus>Закрыть</button>
+    </form>
   </dialog>
+  <OnboardingTour ref="onboarding" :camera="cameraPanel" :scene="viewport" :crane="cranePanel"
+    @dismiss="helpButton?.focus({ preventScroll: true })" />
 </template>

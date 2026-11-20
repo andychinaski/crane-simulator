@@ -3,6 +3,11 @@ import { expect, type Page } from '@playwright/test'
 export const canvas = (page: Page) => page.locator('canvas[data-ready=true]')
 export const status = (page: Page) => page.locator('#stage-status')
 
+export async function openSimulator(page: Page) {
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Пропустить обучение', exact: true }).click()
+}
+
 export async function setSlider(page: Page, id: string, value: number) {
   const slider = page.locator(`#${id}`)
   await slider.fill(String(value))

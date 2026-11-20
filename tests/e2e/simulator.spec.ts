@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 import { cameraControls, craneControls, formatValue } from '../../src/state/controls'
+import { openSimulator } from './controls'
 
 for (const [width, height] of [[1672, 941], [1440, 900], [1280, 720]]) {
   test(`renders WebGL and all panels at ${width}×${height}`, async ({ page }) => {
@@ -9,7 +10,7 @@ for (const [width, height] of [[1672, 941], [1440, 900], [1280, 720]]) {
       if (message.type() === 'error') errors.push(message.text())
     })
     await page.setViewportSize({ width, height })
-    await page.goto('/')
+    await openSimulator(page)
 
     const canvas = page.locator('canvas[data-ready=true]')
     await expect(canvas).toBeVisible()
@@ -67,14 +68,14 @@ test('explains WebGL 2 initialization failure', async ({ page }) => {
       },
     })
   })
-  await page.goto('/')
+  await openSimulator(page)
   await expect(page.getByRole('alert')).toContainText('поддерживает WebGL 2')
   await expect(page.getByRole('slider', { name: 'Наклон стрелы' })).toBeDisabled()
 })
 
 test('keeps both panels usable on a narrow screen', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
-  await page.goto('/')
+  await openSimulator(page)
   await expect(page.locator('canvas[data-ready=true]')).toBeVisible()
   const scene = (await page.getByRole('region', { name: 'Трёхмерная сцена' }).boundingBox())!
   const camera = (await page.getByRole('region', { name: 'Камера', exact: true }).boundingBox())!
