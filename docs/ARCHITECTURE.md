@@ -106,3 +106,10 @@ worldScene
 - Критические инварианты тестируются без браузера; сценарии управляются через UI в E2E, если доступен браузер с WebGL.
 
 Справка по официальным API: https://threejs.org/docs/pages/OrbitControls.html , https://threejs.org/manual/pages/scenegraph.html , https://vite.dev/guide/ .
+
+<!-- G5:REGISTERED -->
+## 9. G5 — презентационный слой обучения
+
+Обучение — только Vue/DOM поверх существующего интерфейса. В текущем `src/App.vue` целевые зоны имеют классы `.viewport`, `.camera-panel` и `.crane-panel`. Возможен отдельный `src/components/OnboardingTour.vue`, без глобального store, роутера, нового canvas и нового Three.js render loop.
+
+Позиционирование spotlight привязать к реальным DOM-границам и адаптировать к resize; существующие компоненты не переносить/клонировать. В активном туре блокировать управление underlying UI/OrbitControls, а после закрытия гарантированно восстанавливать. Не менять механику крана и демонстрации. Подробности в `docs/G5_ONBOARDING.md`.

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
-import { canvas, setSlider, status, waitForCrane } from './controls'
+import { canvas, openSimulator, setSlider, status, waitForCrane } from './controls'
 
 async function capture(page: Page, name: string) {
   if (process.env.CAPTURE_G4 === '1') await page.screenshot({ path: `evidence/G4/${name}.png` })
@@ -7,7 +7,7 @@ async function capture(page: Page, name: string) {
 
 test.beforeEach(async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 })
-  await page.goto('/')
+  await openSimulator(page)
   await expect(canvas(page)).toBeVisible()
 })
 

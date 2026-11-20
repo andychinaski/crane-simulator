@@ -222,6 +222,8 @@ dialog {
 }
 dialog::backdrop { background: #101418b8; }
 dialog p { margin: 14px 0; line-height: 1.5; }
+.help-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.help-actions button { font-size: 16px; padding-inline: 12px; }
 
 @media (max-width: 1000px) {
   .workspace {
