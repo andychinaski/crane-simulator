@@ -1,0 +1,18 @@
+{
+  "$schemaComment": "Единственный источник названий/диапазонов/значений регуляторов. Единицы: deg, m, percent. Camera pan — метры вдоль плоскости кадра, zoom — процент от стартового масштаба, sceneOrbit — азимут камеры.",
+  "crane": [
+    { "id": "platformYaw", "label": "Поворот платформы", "min": -180, "max": 180, "step": 1, "initial": 25, "unit": "deg" },
+    { "id": "boomPitch", "label": "Наклон стрелы", "min": 10, "max": 75, "step": 1, "initial": 42, "unit": "deg" },
+    { "id": "boomLength", "label": "Длина стрелы", "min": 4, "max": 8, "step": 0.1, "initial": 6.4, "unit": "m" },
+    { "id": "ropeLength", "label": "Длина троса", "min": 0.5, "max": 8, "step": 0.1, "initial": 3.2, "unit": "m" },
+    { "id": "gripperYaw", "label": "Поворот захвата", "min": -180, "max": 180, "step": 1, "initial": 15, "unit": "deg" },
+    { "id": "gripperOpen", "label": "Раскрытие захвата", "min": 0, "max": 100, "step": 1, "initial": 80, "unit": "percent" },
+    { "id": "movementSpeed", "label": "Скорость движений", "min": 10, "max": 100, "step": 1, "initial": 60, "unit": "percent" }
+  ],
+  "camera": [
+    { "id": "cameraPanX", "label": "Горизонталь", "min": -4, "max": 4, "step": 0.1, "initial": 0, "unit": "m" },
+    { "id": "cameraPanY", "label": "Вертикаль", "min": -4, "max": 4, "step": 0.1, "initial": 0, "unit": "m" },
+    { "id": "cameraZoom", "label": "Масштаб", "min": 50, "max": 300, "step": 1, "initial": 100, "unit": "percent" },
+    { "id": "sceneOrbit", "label": "Обход сцены", "min": -180, "max": 180, "step": 1, "initial": 0, "unit": "deg" }
+  ]
+}

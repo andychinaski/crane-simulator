@@ -1,0 +1,246 @@
+:root {
+  font-family: "Segoe UI", system-ui, sans-serif;
+  color: #f4f3f1;
+  background: #171c20;
+  color-scheme: dark;
+  font-synthesis: none;
+  --amber: #f9a01c;
+  --track: #565c60;
+  --border: #454b50;
+  --gap: clamp(9px, .8vw, 14px);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; min-width: 320px; }
+button, input { font: inherit; }
+
+.app-header {
+  height: clamp(58px, 8.3dvh, 78px);
+  padding: 0 clamp(16px, 1.8vw, 30px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(110deg, #1c2126, #191e23);
+}
+
+h1, h2, p { margin: 0; }
+h1 { font-size: clamp(23px, 2.45vw, 41px); line-height: 1.1; transform: translateY(-3px); }
+h2 { line-height: 1.15; }
+
+.workspace {
+  height: calc(100dvh - clamp(58px, 8.3dvh, 78px));
+  min-height: 580px;
+  padding: var(--gap) clamp(10px, .7vw, 12px) clamp(11px, 2dvh, 19px);
+  display: grid;
+  gap: calc(var(--gap) * .75) var(--gap);
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 26%);
+  grid-template-rows: minmax(0, 1fr) clamp(70px, 10dvh, 95px);
+  grid-template-areas: "view crane" "camera crane";
+}
+
+.panel {
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  background: linear-gradient(115deg, #292e32, #23282c);
+}
+
+.viewport {
+  position: relative;
+  grid-area: view;
+  min-height: 0;
+  overflow: hidden;
+  background: #53616d;
+}
+.viewport canvas { display: block; width: 100%; height: 100%; }
+.cargo-status {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  display: grid;
+  gap: 5px;
+  max-width: calc(100% - 24px);
+  padding: 10px 14px;
+  border: 1px solid #b7c9d445;
+  border-radius: 7px;
+  background: #1c232be8;
+  pointer-events: none;
+}
+.cargo-status strong { font-size: clamp(16px, 1.35vw, 22px); }
+.cargo-status span { font-size: clamp(14px, 1.13vw, 18px); line-height: 1.3; color: #e4e7eb; }
+.cargo-status [data-state="PLACED"], .cargo-status [data-hint="ready"] { color: #8de6ce; }
+.cargo-status [data-hint="airborne"] { color: #ffcc89; }
+.scene-error {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  text-align: center;
+  background: #272e34;
+}
+
+.crane-panel {
+  grid-area: crane;
+  display: flex;
+  flex-direction: column;
+  padding: clamp(10px, 1.3dvh, 15px) clamp(13px, 1.45vw, 25px) 0;
+}
+.crane-panel h2 {
+  padding-bottom: clamp(9px, 1.6dvh, 16px);
+  font-size: clamp(21px, 2.02vw, 34px);
+}
+.crane-sliders { flex: 1; display: grid; grid-template-rows: repeat(7, 1fr); }
+.crane-sliders .control {
+  border-top: 1px solid var(--border);
+  display: grid;
+  align-content: center;
+  gap: clamp(4px, .85dvh, 8px);
+}
+.crane-sliders .control:last-child { border-bottom: 1px solid var(--border); }
+.control-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 6px;
+  font-size: clamp(16px, 1.45vw, 24px);
+  font-weight: 650;
+}
+output { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.control input {
+  display: block;
+  width: 100%;
+  margin: 0;
+  height: clamp(23px, 3.05dvh, 29px);
+  appearance: none;
+  background: transparent;
+  opacity: 1;
+}
+.control input:enabled { cursor: pointer; }
+.control input:focus-visible { outline: 2px solid #ffbd59; outline-offset: 3px; border-radius: 6px; }
+.control input::-webkit-slider-runnable-track {
+  height: clamp(8px, 1.25dvh, 12px);
+  border-radius: 12px;
+  background: linear-gradient(to right, var(--amber) var(--fill), var(--track) var(--fill));
+}
+.control input::-moz-range-track {
+  height: clamp(8px, 1.25dvh, 12px);
+  border-radius: 12px;
+  background: linear-gradient(to right, var(--amber) var(--fill), var(--track) var(--fill));
+}
+.control input::-webkit-slider-thumb {
+  appearance: none;
+  width: clamp(19px, 2.85dvh, 27px);
+  height: clamp(19px, 2.85dvh, 27px);
+  margin-top: calc((clamp(8px, 1.25dvh, 12px) - clamp(19px, 2.85dvh, 27px)) / 2);
+  border: 0;
+  border-radius: 50%;
+  background: var(--amber);
+  box-shadow: 0 1px 3px #12161a;
+}
+.control input::-moz-range-thumb {
+  width: clamp(19px, 2.85dvh, 27px);
+  height: clamp(19px, 2.85dvh, 27px);
+  border: 0;
+  border-radius: 50%;
+  background: var(--amber);
+  box-shadow: 0 1px 3px #12161a;
+}
+
+.stage-status {
+  margin: clamp(6px, 1.15dvh, 11px) 0;
+  color: #c1c6cb;
+  font-size: clamp(12px, .9vw, 15px);
+}
+.actions {
+  display: grid;
+  grid-template-columns: 1.55fr 1fr;
+  gap: clamp(9px, 1.1vw, 18px);
+  margin-bottom: clamp(16px, 5.3dvh, 50px);
+}
+button {
+  min-height: 42px;
+  padding: 6px clamp(10px, 1.2vw, 20px);
+  border: 2px solid transparent;
+  border-radius: 9px;
+  font-weight: 650;
+  white-space: nowrap;
+  color: inherit;
+}
+button:enabled { cursor: pointer; }
+button:focus-visible { outline: 2px solid #ffbd59; outline-offset: 3px; }
+.secondary {
+  background: #33393e;
+  border-color: #777d82;
+  font-size: clamp(15px, 1.3vw, 22px);
+}
+.actions button {
+  min-height: clamp(44px, 6.8dvh, 64px);
+  padding-inline: 7px;
+  font-size: clamp(16px, 1.5vw, 25px);
+}
+.actions button:disabled { opacity: 0.65; }
+.demo { color: #171009; background: #f79a15; border-color: #f79a15; }
+.stop { background: #492d2c; border-color: #f04937; }
+
+.camera-panel {
+  grid-area: camera;
+  display: grid;
+  grid-template-columns: auto repeat(4, minmax(0, 1fr)) auto;
+  align-items: center;
+  gap: clamp(11px, 1.6vw, 28px);
+  padding: 0 clamp(12px, 1vw, 17px) 0 clamp(13px, 1.75vw, 30px);
+}
+.camera-panel h2 {
+  display: flex;
+  align-items: center;
+  align-self: stretch;
+  margin-block: 14px;
+  padding-right: clamp(12px, 1.9vw, 32px);
+  border-right: 1px solid var(--border);
+  font-size: clamp(18px, 1.8vw, 30px);
+}
+.camera-panel .control-label {
+  flex-wrap: wrap;
+  gap: 0 4px;
+  font-size: clamp(13px, 1.04vw, 18px);
+}
+.camera-panel output { font-size: clamp(12px, .85vw, 14px); color: #c1c6cb; }
+.camera-panel .secondary { min-height: clamp(40px, 5.4dvh, 51px); }
+
+dialog {
+  max-height: calc(100dvh - 30px);
+  overflow: auto;
+  width: min(480px, calc(100% - 30px));
+  padding: 24px;
+  border: 1px solid #616970;
+  border-radius: 11px;
+  background: #272c30;
+  color: inherit;
+}
+dialog::backdrop { background: #101418b8; }
+dialog p { margin: 14px 0; line-height: 1.5; }
+
+@media (max-width: 1000px) {
+  .workspace {
+    height: auto;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: clamp(320px, 65dvh, 640px) auto auto;
+    grid-template-areas: "view" "camera" "crane";
+  }
+  .crane-panel { padding-bottom: 16px; }
+  .crane-sliders .control { min-height: 61px; }
+  .actions { margin-bottom: 0; }
+  .camera-panel { min-height: 68px; }
+}
+
+@media (max-width: 620px) {
+  .camera-panel {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 10px 12px;
+  }
+  .camera-panel h2 { grid-column: 1 / -1; margin: 0; border: 0; }
+  .camera-panel button { grid-column: 1 / -1; justify-self: start; }
+}
