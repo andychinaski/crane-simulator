@@ -27,10 +27,8 @@
     {
       "id": "lift-cargo",
       "controlId": "ropeLength",
-      "target": 3.6,
-      "unit": "m",
-      "instruction": "Подними ящик: трос 3,6 м",
-      "condition": "actualNear AND cargoState=ATTACHED AND cargoLifted"
+      "instruction": "Подними ящик",
+      "condition": "cargoState=ATTACHED AND cargoLifted"
     },
     {
       "id": "rotate-platform",
@@ -77,17 +75,16 @@
       "id": "release-cargo",
       "controlId": "gripperOpen",
       "target": 80,
+      "comparison": "atLeast",
       "unit": "percent",
-      "instruction": "Раскрой захват до 80% и оставь ящик на площадке",
-      "condition": "actualNear AND cargoState=PLACED AND cargoInsideLandingArea"
+      "instruction": "Раскрой захват до 80% или больше и оставь ящик на площадке",
+      "condition": "actualAtLeast AND cargoState=PLACED AND cargoInsideLandingArea"
     },
     {
       "id": "retract-empty-rope",
       "controlId": "ropeLength",
-      "target": 3,
-      "unit": "m",
-      "instruction": "Подними пустой захват: укороти трос до 3 м",
-      "condition": "actualNear AND cargoState=PLACED"
+      "instruction": "Подними пустой захват",
+      "condition": "cargoState=PLACED AND cargoInsideLandingArea AND emptyGripperLifted"
     }
   ],
   "validation": {

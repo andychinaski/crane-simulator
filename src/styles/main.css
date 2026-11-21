@@ -173,42 +173,91 @@ output { white-space: nowrap; font-variant-numeric: tabular-nums; }
   color: #c1c6cb;
   font-size: clamp(12px, .9vw, 15px);
 }
+:is(.guide-card, .guide-control) {
+  --guide-bg: rgba(3, 67, 29, .5);
+  --guide-edge: #48c976;
+  --guide-glow: rgba(45, 220, 95, .48);
+  --guide-accent: #bbf7cc;
+  --guide-highlight: rgba(45, 220, 95, .14);
+  --guide-frame-glow: 0 0 10px 2px var(--guide-glow), 0 0 34px var(--guide-glow);
+}
+.guide-card[data-guide-state="ACTIVE"] {
+  --guide-bg: rgba(32, 36, 39, .5);
+  --guide-edge: #92989d;
+  --guide-glow: rgba(169, 175, 180, .22);
+  --guide-accent: #d3d6d8;
+  color: var(--guide-accent);
+}
+.guide-card[data-guide-state="REGRESSED"] {
+  --guide-bg: rgba(112, 52, 4, .5);
+  --guide-edge: #ffa83c;
+  --guide-glow: rgba(255, 164, 52, .52);
+  --guide-accent: #ffdfae;
+}
 .guide-card {
-  flex: none;
+  --guide-inset: clamp(12px, 1.4vw, 24px);
+  position: absolute;
+  z-index: 1;
+  inset-inline: 0;
+  bottom: var(--guide-inset);
+  width: clamp(360px, 65%, 760px);
+  max-width: calc(100% - var(--guide-inset) * 2);
+  max-height: calc(100% - var(--guide-inset) - 56px);
+  margin-inline: auto;
+  overflow: auto;
   display: grid;
-  gap: 5px;
-  margin-top: 9px;
-  padding: 9px 11px;
-  border: 1px solid #599a81;
-  border-radius: 9px;
-  background: #163c32c4;
-  box-shadow: 0 0 13px #69d9ba19 inset;
-  font-size: 14px;
+  row-gap: 12px;
+  padding: 13px clamp(13px, 2vw, 24px);
+  border: 1px solid var(--guide-edge);
+  border-radius: 26px;
+  background: var(--guide-bg);
+  box-shadow: var(--guide-frame-glow);
+  font-size: clamp(16px, 1.4vw, 18px);
   line-height: 1.35;
 }
 .guide-card h3 {
   margin: 0;
-  color: #b1f1d9;
-  font-size: 14px;
+  color: var(--guide-accent);
+  font-size: clamp(18px, 1.5vw, 20px);
 }
-.guide-card strong { color: #dcffeb; white-space: nowrap; }
-.guide-feedback { color: #c5e3d7; }
-.guide-feedback[data-complete="true"] { color: #9aefc9; font-weight: 700; }
+.guide-card strong { color: var(--guide-accent); white-space: nowrap; }
+.guide-step-content h3 { display: inline; margin-right: 10px; }
+#guide-instruction { display: inline; }
 .guide-actions { display: flex; flex-wrap: wrap; gap: 6px; justify-content: space-between; }
+.guide-result {
+  top: 50%;
+  bottom: auto;
+  transform: translateY(-50%);
+  text-align: center;
+}
+.guide-result .guide-actions { justify-content: center; }
 .guide-card button {
-  min-height: 35px;
+  min-height: 40px;
   width: fit-content;
-  padding: 3px 8px;
-  font-size: 13px;
+  padding: 3px 10px;
+  font-size: 16px;
+  background: var(--guide-accent);
+  color: #17271e;
 }
-.guide-next { background: #9aefc9; color: #143528; }
-.guide-next:disabled { background: #314a42; color: #c3d8cf; }
+.guide-card button:disabled { background: #ffffff20; color: #f4f3f1; }
 .crane-sliders .guide-control {
-  background: #67dcb51c;
-  border-radius: 5px;
-  box-shadow: 0 0 0 1px #84e9c6 inset;
-  padding-inline: 7px;
+  --amber: var(--guide-edge);
+  position: relative;
+  isolation: isolate;
+  border-color: transparent;
 }
+.crane-sliders .guide-control::before {
+  content: "";
+  position: absolute;
+  inset: 0 -9px;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: 16px;
+  background: var(--guide-highlight);
+  box-shadow: 0 0 0 1px var(--guide-edge) inset, var(--guide-frame-glow);
+}
+.crane-sliders .guide-control .control-label { color: var(--guide-accent); }
+.crane-sliders .guide-control input:focus-visible { outline-color: var(--guide-edge); }
 button {
   min-height: 42px;
   padding: 6px clamp(10px, 1.2vw, 20px);
@@ -269,7 +318,15 @@ dialog p { margin: 14px 0; line-height: 1.5; }
 .help-actions { display: flex; flex-wrap: wrap; gap: 10px; }
 .help-actions button { font-size: 16px; padding-inline: 12px; }
 
-.scenario-dialog { width: min(510px, calc(100% - 24px)); }
+.scenario-dialog {
+  position: fixed;
+  inset: auto;
+  top: 50%;
+  left: 50%;
+  margin: 0;
+  width: min(510px, calc(100% - 32px));
+  max-height: calc(100dvh - 32px);
+}
 .scenario-dialog::backdrop { background: #0a0e14ac; backdrop-filter: blur(2px); }
 .mode-actions {
   display: grid;
@@ -282,7 +339,10 @@ dialog p { margin: 14px 0; line-height: 1.5; }
 .manual-option { display: grid; gap: 7px; }
 .manual-option label { display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; }
 .manual-option input { width: 17px; height: 17px; accent-color: var(--amber); }
-.mode-cancel { margin-top: 14px; font-size: 14px; }
+
+@media (max-height: 760px), (max-width: 620px) {
+  .guide-card { row-gap: 8px; padding-block: 8px; }
+}
 
 @media (max-width: 1000px) {
   .workspace {

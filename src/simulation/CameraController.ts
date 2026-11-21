@@ -5,7 +5,10 @@ import { cameraControls, clampControl, controlDefinition, initialValues, type Ca
 const center = new THREE.Vector3(2.15, 3.43, -1.20)
 const startOffset = new THREE.Vector3(16, 8, 11)
 const startAzimuth = Math.atan2(startOffset.x, startOffset.z)
-const { degToRad, radToDeg, euclideanModulo } = THREE.MathUtils
+// Keep the orbit pivot and angle. Reproduce the G6 reference's frame at 66% and −0.7 m.
+const referenceZoom = 0.66
+const baseFrameY = -0.7
+const { degToRad, radToDeg, euclideanModulo, lerp, smoothstep } = THREE.MathUtils
 
 export function createCameraController(
   camera: THREE.OrthographicCamera,
@@ -38,8 +41,9 @@ export function createCameraController(
   function updateProjection() {
     camera.left = values.cameraPanX - halfWidth
     camera.right = values.cameraPanX + halfWidth
-    camera.top = values.cameraPanY + halfHeight
-    camera.bottom = values.cameraPanY - halfHeight
+    const frameY = baseFrameY + values.cameraPanY
+    camera.top = frameY + halfHeight
+    camera.bottom = frameY - halfHeight
     camera.updateProjectionMatrix()
   }
 
@@ -71,7 +75,9 @@ export function createCameraController(
   return {
     resize(width: number, height: number) {
       const aspect = width / height
-      const heightForAspect = Math.max(4.35, 6.8 / aspect)
+      // In portrait, constrain the frame by the width of the working area.
+      const minimumHalfWidth = lerp(7.2, 6.8 / referenceZoom, smoothstep(aspect, 0.7, 1.15))
+      const heightForAspect = Math.max(4.35 / referenceZoom, minimumHalfWidth / aspect)
       const widthForAspect = heightForAspect * aspect
       if (halfWidth === widthForAspect && halfHeight === heightForAspect) return
       halfWidth = widthForAspect

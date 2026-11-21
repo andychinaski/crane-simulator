@@ -143,14 +143,16 @@ test('G5 offers training in a reopened tab even with an old completion flag', as
   await expect(button(reopened, 'Пропустить обучение')).toBeVisible()
 })
 
-const sizes = [{ width: 1672, height: 941 }, { width: 1440, height: 900 }, { width: 1280, height: 720 }]
+const sizes = [{ width: 1672, height: 941 }, { width: 1440, height: 900 }, { width: 1280, height: 720 },
+  { width: 390, height: 844 }]
 const zones = [
   { name: 'camera', selector: '.camera-panel', title: 'Управление камерой' },
   { name: 'scene', selector: '.viewport', title: 'Рабочая область' },
   { name: 'crane', selector: '.crane-panel', title: 'Управление краном' },
 ]
 
-test('G5 places each spotlight and full card at all desktop sizes and tracks live resize', async ({ page }) => {
+test('G7 anchors the welcome to the scene and fits all G5 spotlights through live resize', async ({ page }) => {
+  test.setTimeout(75_000)
   await page.setViewportSize(sizes[0])
   await page.goto('/')
   await expect(canvas(page)).toBeVisible()
@@ -167,14 +169,20 @@ test('G5 places each spotlight and full card at all desktop sizes and tracks liv
   }
 
   async function capture(name: string, width: number, height: number) {
-    if (process.env.CAPTURE_G5 === '1') {
-      await page.screenshot({ path: `evidence/G5/${name}-${width}x${height}.png` })
+    if (process.env.CAPTURE_G7 === '1') {
+      await page.screenshot({ path: `evidence/G7/${name}-${width}x${height}.png` })
     }
   }
 
   for (const size of sizes) {
     await page.setViewportSize(size)
     await verifyCard()
+    await expect.poll(async () => {
+      const scene = (await page.locator('.viewport').boundingBox())!
+      const dialog = (await card.boundingBox())!
+      return Math.max(Math.abs(scene.x + scene.width / 2 - dialog.x - dialog.width / 2),
+        Math.abs(scene.y + scene.height / 2 - dialog.y - dialog.height / 2))
+    }).toBeLessThan(2)
     await capture('welcome', size.width, size.height)
   }
   await button(page, 'Пройти обучение').click()
@@ -185,8 +193,19 @@ test('G5 places each spotlight and full card at all desktop sizes and tracks liv
     for (const size of sizes) {
       await page.setViewportSize(size)
       const target = page.locator(zone.selector)
-      await expect.poll(() => spotlight(page).boundingBox()).toEqual(await target.boundingBox())
+      await expect.poll(async () => {
+        const bounds = (await target.boundingBox())!
+        const x = Math.max(0, bounds.x)
+        const y = Math.max(0, bounds.y)
+        const width = Math.min(size.width, bounds.x + bounds.width) - x
+        const height = Math.min(size.height, bounds.y + bounds.height) - y
+        const highlight = await spotlight(page).boundingBox()
+        return highlight ? Math.max(Math.abs(highlight.x - x), Math.abs(highlight.y - y),
+          Math.abs(highlight.width - width), Math.abs(highlight.height - height)) : Infinity
+      }).toBeLessThan(2)
       await verifyCard()
+      if (index > 0) expect((await button(page, 'Назад').boundingBox())!.width).toBeGreaterThanOrEqual(110)
+      if (size.width === 1672 && zone.name !== 'scene') expect((await card.boundingBox())!.width).toBe(500)
       if (index < zones.length - 1) {
         const next = (await button(page, 'Далее').boundingBox())!
         const skip = (await button(page, 'Пропустить').boundingBox())!

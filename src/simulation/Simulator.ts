@@ -8,6 +8,7 @@ import { buildWorld } from './SceneWorld'
 
 export type RopeContact = 'floor' | 'lid' | 'side' | null
 const crateApproachAxes = ['platformYaw', 'boomPitch', 'boomLength', 'gripperOpen'] as const
+const liftTolerance = 1e-6
 
 export interface ScenarioSnapshot {
   readonly actual: Readonly<Record<CraneControl, number>>
@@ -18,6 +19,7 @@ export interface ScenarioSnapshot {
   readonly cargoHint: CargoHint
   readonly cargoLifted: boolean
   readonly cargoInsideLandingArea: boolean
+  readonly emptyGripperLifted: boolean
 }
 
 interface SceneEvents {
@@ -49,6 +51,7 @@ export function mountScene(viewport: HTMLElement, events: SceneEvents) {
   })
   const surfaceAt = cargo.surfaceUnderGripper.bind(cargo)
   let sideBlocked = false
+  let placementGripperHeight: number | undefined
   positionCrane()
   cargo.update(crane.model.gripper, motion.actual.gripperOpen, motion.target.gripperOpen)
   const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 205)
@@ -102,11 +105,14 @@ export function mountScene(viewport: HTMLElement, events: SceneEvents) {
       cargoHint: cargo.hint,
       cargoLifted: cargo.lifted,
       cargoInsideLandingArea: cargo.isInDeliveryArea(),
+      emptyGripperLifted: cargo.state === 'PLACED' && placementGripperHeight !== undefined &&
+        crane.model.gripper.position.y > placementGripperHeight + liftTolerance,
     })
   }
 
   function resetPose() {
     sideBlocked = false
+    placementGripperHeight = undefined
     motion.resetPose()
     cargo.reset()
     positionCrane()
@@ -144,6 +150,9 @@ export function mountScene(viewport: HTMLElement, events: SceneEvents) {
       }
       limitRope()
       const interaction = cargo.update(crane.model.gripper, motion.actual.gripperOpen, motion.target.gripperOpen)
+      if (interaction === 'released' && cargo.state === 'PLACED') {
+        placementGripperHeight = crane.model.gripper.position.y
+      }
       if (interaction === 'block-opening') {
         const heldOpening = Math.min(previousPose.gripperOpen, captureOpening)
         motion.actual.gripperOpen = previousPose.gripperOpen

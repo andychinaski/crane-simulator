@@ -12,6 +12,7 @@ const initial: ScenarioSnapshot = {
   cargoHint: 'ready',
   cargoLifted: false,
   cargoInsideLandingArea: false,
+  emptyGripperLifted: false,
 }
 const carrying: ScenarioSnapshot = {
   ...initial,
@@ -48,6 +49,19 @@ describe('manual guide', () => {
     expect(evaluateStep(3, { ...carrying, cargoLifted: false }).complete).toBe(false)
   })
 
+  it('accepts any actual lift of the attached crate and preserves it during transfer', () => {
+    const higher = { ...carrying, actual: { ...carrying.actual, ropeLength: 1.5 } }
+    const slightlyRaised = { ...carrying, actual: { ...carrying.actual, ropeLength: 5 } }
+    expect(evaluateStep(2, slightlyRaised).complete).toBe(true)
+    expect(evaluateStep(2, higher).complete).toBe(true)
+    expect(evaluateStep(3, slightlyRaised).complete).toBe(true)
+    expect(evaluateStep(2, { ...higher, cargoLifted: false }).complete).toBe(false)
+    expect(evaluateStep(2, { ...higher, cargoState: 'GROUND' }).complete).toBe(false)
+    const onFloor = { ...slightlyRaised, cargoLifted: false }
+    expect(evaluateStep(2, onFloor).complete).toBe(false)
+    expect(evaluateStep(3, onFloor).invariantBroken).toBe(true)
+  })
+
   it('checks loaded contact at the dynamic limit and releases that constraint for delivery', () => {
     expect(evaluateStep(7, landed).complete).toBe(true)
     expect(evaluateStep(7, { ...landed, ropeMaximum: 4.174 }).complete).toBe(false)
@@ -61,7 +75,14 @@ describe('manual guide', () => {
     }
     expect(evaluateStep(8, released).complete).toBe(true)
     expect(evaluateStep(8, { ...released, cargoInsideLandingArea: false }).complete).toBe(false)
-    expect(evaluateStep(guideSteps.length - 1, { ...released, actual: { ...released.actual, ropeLength: 3 } })
-      .complete).toBe(true)
+    const wider = { ...released, actual: { ...released.actual, gripperOpen: 95 } }
+    expect(evaluateStep(8, wider).complete).toBe(true)
+    expect(evaluateStep(8, { ...wider, cargoState: 'ATTACHED' }).complete).toBe(false)
+    expect(evaluateStep(8, { ...released, actual: { ...released.actual, gripperOpen: 79 } }).complete).toBe(false)
+    const finalStep = guideSteps.length - 1
+    expect(evaluateStep(finalStep, wider).complete).toBe(false)
+    const raised = { ...wider, emptyGripperLifted: true, actual: { ...wider.actual, ropeLength: 4 } }
+    expect(evaluateStep(finalStep, raised).complete).toBe(true)
+    expect(evaluateStep(finalStep, { ...raised, cargoInsideLandingArea: false }).complete).toBe(false)
   })
 })

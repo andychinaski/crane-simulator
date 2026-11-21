@@ -9,7 +9,8 @@ type StepId = 'lower-to-handle' | 'close-gripper' | 'lift-cargo' | 'rotate-platf
 interface RouteStep {
   id: StepId
   controlId: CraneAxis
-  target: number | null
+  target?: number | null
+  comparison?: 'atLeast'
 }
 
 export const guideSteps = config.steps as readonly RouteStep[]
@@ -22,29 +23,38 @@ const instructions: Record<StepId, string> = {
   'pitch-boom': 'Уменьши наклон стрелы',
   'extend-boom': 'Выдвини стрелу',
   'align-gripper': 'Разверни захват',
-  'lower-to-platform': 'Опусти груз до касания площадки. На ползунке троса можно нажать End.',
+  'lower-to-platform': 'Опусти груз до касания площадки.',
   'release-cargo': 'Раскрой захват и оставь ящик на площадке',
-  'retract-empty-rope': 'Укороти трос и подними пустой захват',
+  'retract-empty-rope': 'Подними пустой захват',
 }
 
 const epsilon = 1e-8
 
 export function guideValue(step: RouteStep, ropeMaximum: number) {
-  return formatValue(controlDefinition(step.controlId), step.target ?? Number(ropeMaximum.toFixed(2)))
+  if (step.target === undefined) return ''
+  const value = formatValue(controlDefinition(step.controlId), step.target ?? Number(ropeMaximum.toFixed(2)))
+  if (step.comparison === 'atLeast') return `не меньше ${value}`
+  return value
 }
 
 export function guideInstruction(step: RouteStep) {
   return instructions[step.id]
 }
 
-export function matchesGuideValue(step: RouteStep, snapshot: ScenarioSnapshot) {
+function matchesGuideValue(step: RouteStep, snapshot: ScenarioSnapshot) {
+  if (step.target === undefined) return true
   const target = step.target ?? snapshot.ropeMaximum
+  const actual = snapshot.actual[step.controlId]
+  if (step.comparison === 'atLeast') return actual >= target - epsilon
   const tolerance = step.target === null ? epsilon : controlDefinition(step.controlId).step / 2 + epsilon
-  return Math.abs(snapshot.actual[step.controlId] - target) <= tolerance
+  return Math.abs(actual - target) <= tolerance
 }
 
-export function restoreValue(step: RouteStep, snapshot: ScenarioSnapshot) {
-  return `Верни значение «${controlDefinition(step.controlId).label}» к ${guideValue(step, snapshot.ropeMaximum)}.`
+function restoreValue(step: RouteStep, snapshot: ScenarioSnapshot) {
+  const label = controlDefinition(step.controlId).label
+  const value = guideValue(step, snapshot.ropeMaximum)
+  if (step.comparison) return `Верни «${label}» в допустимый диапазон (${value}).`
+  return `Верни значение «${label}» к ${value}.`
 }
 
 export function evaluateStep(index: number, snapshot: ScenarioSnapshot) {
@@ -52,7 +62,8 @@ export function evaluateStep(index: number, snapshot: ScenarioSnapshot) {
   const { cargoState, cargoHint, cargoLifted, cargoInsideLandingArea } = snapshot
   const delivered = cargoState === 'PLACED' && cargoInsideLandingArea
   if (cargoHint === 'outside') {
-    return { complete: false, issue: 'Ящик вне площадки. Подними его снова или сбрось сценарий.' }
+    return { complete: false, invariantBroken: index > 1 && index !== 8,
+      issue: 'Ящик вне площадки. Подними его снова или сбрось сценарий.' }
   }
   // Keep the latest completed setting on each axis until that axis is needed again.
   const preserved = new Set<CraneAxis>([step.controlId])
@@ -60,9 +71,9 @@ export function evaluateStep(index: number, snapshot: ScenarioSnapshot) {
     const previous = guideSteps[earlier]
     if (preserved.has(previous.controlId)) continue
     preserved.add(previous.controlId)
-    // The loaded contact limit stops applying as soon as the crate is released.
-    if (previous.target !== null && !matchesGuideValue(previous, snapshot)) {
-      return { complete: false, issue: restoreValue(previous, snapshot) }
+    // Physical lift and contact are checked by the current step's cargo conditions.
+    if (typeof previous.target === 'number' && !matchesGuideValue(previous, snapshot)) {
+      return { complete: false, invariantBroken: true, issue: restoreValue(previous, snapshot) }
     }
   }
 
@@ -75,7 +86,7 @@ export function evaluateStep(index: number, snapshot: ScenarioSnapshot) {
       cargoReady = cargoState === 'ATTACHED'
       break
     case 'lift-cargo':
-      cargoReady = cargoLifted
+      cargoReady = cargoState === 'ATTACHED' && cargoLifted
       break
     case 'rotate-platform':
     case 'pitch-boom':
@@ -87,8 +98,10 @@ export function evaluateStep(index: number, snapshot: ScenarioSnapshot) {
       cargoReady = cargoState === 'ATTACHED' && cargoHint === 'landed' && cargoInsideLandingArea
       break
     case 'release-cargo':
-    case 'retract-empty-rope':
       cargoReady = delivered
+      break
+    case 'retract-empty-rope':
+      cargoReady = delivered && snapshot.emptyGripperLifted
       break
   }
 
@@ -96,16 +109,20 @@ export function evaluateStep(index: number, snapshot: ScenarioSnapshot) {
     return { complete: false, issue: 'Сначала освободи ящик на полу или сбрось сценарий.' }
   }
   if (index > 1 && index < 8 && cargoState !== 'ATTACHED') {
-    return { complete: false, issue: 'Ящик должен быть в захвате. Подними его снова или сбрось сценарий.' }
+    return { complete: false, invariantBroken: true,
+      issue: 'Ящик должен быть в захвате. Подними его снова или сбрось сценарий.' }
+  }
+  if (index >= 3 && index <= 6 && !cargoLifted) {
+    return { complete: false, invariantBroken: true, issue: 'Верни ящик в поднятое положение.' }
   }
   if (step.id === 'lower-to-platform' && cargoHint === 'landed' && !cargoInsideLandingArea) {
     return { complete: false, issue: 'Ящик опущен вне контура. Подними его и совмести с площадкой.' }
   }
   if (step.id === 'release-cargo' && cargoLifted) {
-    return { complete: false, issue: 'Сначала снова опусти ящик до касания площадки.' }
+    return { complete: false, invariantBroken: true, issue: 'Снова опусти ящик до касания площадки.' }
   }
   if (step.id === 'retract-empty-rope' && !delivered) {
-    return { complete: false, issue: 'Оставь ящик внутри площадки или сбрось сценарий.' }
+    return { complete: false, invariantBroken: true, issue: 'Оставь ящик внутри площадки или сбрось сценарий.' }
   }
   return { complete: cargoReady && matchesGuideValue(step, snapshot) && !snapshot.moving, issue: '' }
 }

@@ -20,9 +20,17 @@ export async function openSimulator(page: Page) {
   await chooseManual(page)
 }
 
-export async function chooseDemo(page: Page, confirmReset = false) {
+export async function chooseDemo(page: Page) {
   await modeDialog(page).getByRole('button', { name: 'Демонстрация', exact: true }).click()
-  if (confirmReset) await modeDialog(page).getByRole('button', { name: 'Сбросить и продолжить' }).click()
+}
+
+export const scenarioReset = (page: Page) => page.getByRole('button', { name: 'Сбросить сценарий' })
+export const confirmReset = (page: Page) => modeDialog(page).getByRole('button', { name: 'Сбросить', exact: true })
+
+export async function resetToModeSelection(page: Page) {
+  await scenarioReset(page).click()
+  await confirmReset(page).click()
+  await expect(modeDialog(page)).toHaveAccessibleName('Выбрать режим')
 }
 
 export async function setSlider(page: Page, id: string, value: number) {

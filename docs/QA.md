@@ -125,3 +125,17 @@ Gx — ожидает приёмки
 | R25 | G1–G5 regression, keyboard/accessibility и 1672×941, 1440×900, 1280×720, 390px | npm run check; npm run test:e2e; реальные screenshots |
 
 После проверок вывести доказательства в `evidence/G6/`, перевести G6 в `AWAITING_APPROVAL`, дождаться решения владельца.
+
+<!-- G7_REGISTERED_2026_11_21 -->
+## G7 acceptance checks
+
+- Welcome and G6 mode modal centered over scene (page-wide dim) at desktop and small viewports.
+- Three G5 spotlights: 30–40% wider tooltip, visible controls incl. Back, adapt position without clipping/covering target.
+- Only scene reset button remains; confirm Cancel preserves state; Confirm resets scenario then opens G6 mode selector without relaunching G5; independent camera reset.
+- Existing status/cargo/demo telemetry preserved.
+- The completed demonstration offers a fresh manual attempt once. Dismissing leaves the delivered crate in place. Accepting resets the crane and crate, preserves the camera and speed, and opens manual mode with the chosen hint setting. An open dialog defers the offer.
+- The guided card has gray ACTIVE, green COMPLETED and orange REGRESSED states. The current slider highlight stays green, and the delivery area uses the same accent. Verify a small lift from the floor on step 3, lowering to contact by mouse, and opening ≥ 80% with the crate released inside the delivery area. Step 10 accepts an empty gripper that was raised after release and before advancing from step 9. Free mode has neither guide UI element.
+- Steps 3 and 10 retain their last evaluated color during motion, with Next disabled until the crane settles. Check that a settled regression changes the color. Check that cancelling the Finish confirmation preserves the current step and confirming switches to free manual control.
+- The manual delivery result is centered on the scene. Retry starts a new guided attempt with the same camera and speed. Inspect dismisses the result and preserves the delivered crate and crane pose.
+- Camera 0/0/100%/0° reproduces reference `assets/reference/g7/08-camera-composition.png`; after camera adjustments `Сбросить вид` returns to same composition.
+- Run npm run check / npm run test:e2e and compare real screenshots at 1672×941, 1440×900, 1280×720, narrow viewport; record evidence/G7. G7 final gate requires owner acceptance.
