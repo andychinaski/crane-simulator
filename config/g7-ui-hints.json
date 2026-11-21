@@ -1,0 +1,20 @@
+{
+  "$comment": "Визуальные ориентиры для G7, не контракт пиксельного копирования; не подключать файл автоматически без необходимости",
+  "tourTooltip": { "desktopWidthPxApprox": 500, "increasePercentMin": 30, "increasePercentMax": 40, "backButtonMinWidthPxApprox": 112, "viewportSafeMarginPx": 16 },
+  "guidedCard": {
+    "shape": "rounded capsule / adaptive large-radius",
+    "stateColors": {
+      "ACTIVE": "green, no check",
+      "COMPLETED": "green, with check",
+      "REGRESSED": "orange, warning, no check"
+    },
+    "examplePalette": {
+      "greenBackground": "rgba(2, 79, 30, 0.75)",
+      "greenBorder": "#36cf6a",
+      "greenGlow": "rgba(45, 220, 95, 0.35)",
+      "orangeBackground": "rgba(112, 52, 4, 0.78)",
+      "orangeBorder": "#ffa83c"
+    },
+    "placement": "Preserve actual G6 location; move only after owner specifies destination"
+  }
+}

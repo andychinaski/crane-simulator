@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
-import { canvas, chooseDemo, openSimulator, setSlider, status, waitForCrane } from './controls'
+import { canvas, chooseDemo, modeDialog, openSimulator, resetToModeSelection, scenarioReset, setSlider, status, waitForCrane } from './controls'
 
 async function capture(page: Page, name: string) {
   if (process.env.CAPTURE_G4 === '1') await page.screenshot({ path: `evidence/G4/${name}.png` })
@@ -15,13 +15,12 @@ test('G4 demonstration restores the starting scenario and delivers the crate', a
   const errors: string[] = []
   page.on('pageerror', error => errors.push(error.message))
   page.on('console', message => { if (message.type() === 'error') errors.push(message.text()) })
-  const choose = page.getByRole('button', { name: 'Выбрать режим' })
   const stop = page.getByRole('button', { name: 'Стоп', exact: true })
   const cargo = page.locator('#cargo-status')
   await setSlider(page, 'platformYaw', 35)
   await waitForCrane(page)
-  await choose.click()
-  await chooseDemo(page, true)
+  await resetToModeSelection(page)
+  await chooseDemo(page)
   await expect(status(page)).toContainText('Сценарий сброшен')
   await expect(page.locator('#platformYaw')).toHaveValue('25')
   await expect(page.locator('#ropeLength')).toBeDisabled()
@@ -49,10 +48,14 @@ test('G4 demonstration restores the starting scenario and delivers the crate', a
   await capture(page, 'demo-transfer')
   await expect(status(page)).toHaveText('Демонстрация завершена', { timeout: 20_000 })
   await expect(cargo).toHaveText('На площадке')
+  await expect(modeDialog(page)).toHaveAccessibleName('Демонстрация завершена')
+  await page.keyboard.press('Escape')
+  await expect(modeDialog(page)).toBeHidden()
+  await expect(cargo).toHaveText('На площадке')
   await expect(page.locator('#ropeLength')).toHaveValue('3')
   await expect(page.locator('#gripperOpen')).toHaveValue('80')
   await expect(stop).toHaveCount(0)
-  await expect(page.getByRole('button', { name: 'Повторить демонстрацию' })).toBeEnabled()
+  await expect(scenarioReset(page)).toBeEnabled()
   await expect(page.locator('#cameraZoom')).toHaveValue('92')
   await page.getByRole('button', { name: 'Сбросить вид' }).click()
   await capture(page, 'demo-complete')
@@ -61,11 +64,15 @@ test('G4 demonstration restores the starting scenario and delivers the crate', a
 
 test('G4 Stop freezes the loaded crane and returns manual control', async ({ page }) => {
   await setSlider(page, 'movementSpeed', 35)
-  const choose = page.getByRole('button', { name: 'Выбрать режим' })
   const stop = page.getByRole('button', { name: 'Стоп', exact: true })
-  await choose.click()
+  await resetToModeSelection(page)
   await chooseDemo(page)
   await expect(page.locator('#movementSpeed')).toHaveValue('35')
+  await expect(status(page)).toHaveAttribute('data-demo', 'approach')
+  await scenarioReset(page).click()
+  await expect(modeDialog(page)).toHaveAccessibleName('Сбросить текущий сценарий?')
+  await modeDialog(page).getByRole('button', { name: 'Отмена' }).click()
+  await expect(stop).toBeEnabled()
   await expect(status(page)).toHaveAttribute('data-demo', 'transfer', { timeout: 25_000 })
   await page.evaluate(() => new Promise<void>(resolve => {
     let frames = 0
@@ -75,6 +82,7 @@ test('G4 Stop freezes the loaded crane and returns manual control', async ({ pag
   await stop.focus()
   await page.keyboard.press('Enter')
   await expect(status(page)).toHaveText('Демонстрация остановлена')
+  await expect(modeDialog(page)).toBeHidden()
   await expect(page.locator('#cargo-status')).toHaveText('Захвачен')
   expect(Number(await page.locator('#platformYaw').inputValue())).toBeGreaterThan(25)
   expect(Number(await page.locator('#platformYaw').inputValue())).toBeLessThan(54)
@@ -90,8 +98,8 @@ test('G4 Stop freezes the loaded crane and returns manual control', async ({ pag
   await waitForCrane(page)
   await expect(page.locator('#cargo-status')).toHaveText('Захвачен')
   expect((await canvas(page).screenshot()).equals(stopped)).toBe(false)
-  await choose.click()
-  await chooseDemo(page, true)
+  await resetToModeSelection(page)
+  await chooseDemo(page)
   await expect(page.locator('#cargo-status')).toHaveText('Свободен')
   await expect(page.locator('#movementSpeed')).toHaveValue('35')
 })

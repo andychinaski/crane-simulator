@@ -77,3 +77,8 @@
 После любого завершения или пропуска G5 — режимный экран с двумя кнопками: `Демонстрация` и `Попробовать вручную`; для ручного режима чекбокс `С подсказками`. Справа под семью регуляторами размещаются сообщения состояния и (в guided mode) зелёная пошаговая карточка с проверкой фактической механики, значком «Выполнено», обратной проверкой после отката и кнопкой `Далее`. Demo/Stop убираются из боковой панели и доступны в инструментах сцены; отдельный reset сценария не изменяет reset камеры.
 
 **Нормативный UX/поведенческий контракт:** `docs/G6_MODES_AND_GUIDE.md`. Исходные требования G1–G5 не отменяются.
+
+<!-- G7_REGISTERED_2026_11_21 -->
+## G7 — minor UI polish (approved requirements)
+
+See `docs/G7_UI_POLISH.md` for the overlay, reset, status, guided route and camera requirements. The reviewed guided card sits at the bottom center of the scene. It is gray before completion, green on completion or recovery and orange on regression. The current slider and delivery area use the same green accent. The manual route checks actual lifts at steps 3 and 10 and accepts openings of at least 80% at step 9 under the corresponding cargo conditions. The status block stays below the sliders.

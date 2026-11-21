@@ -156,9 +156,10 @@ function buildDeliveryZone(scene: THREE.Scene) {
   zone.name = 'deliveryZone'
   zone.position.set(x, 0.012, z)
   scene.add(zone)
-  box(zone, new THREE.MeshBasicMaterial({ color: 0x69d9ba, transparent: true, opacity: 0.19 }),
+  const green = 0x48c976
+  box(zone, new THREE.MeshBasicMaterial({ color: green, toneMapped: false, transparent: true, opacity: 0.19 }),
     [width, 0.004, depth], [0, 0, 0], 0).castShadow = false
-  const outline = new THREE.MeshBasicMaterial({ color: 0x69d9ba })
+  const outline = new THREE.MeshBasicMaterial({ color: green, toneMapped: false })
   for (const sign of [-1, 1]) {
     box(zone, outline, [width, 0.007, 0.038], [0, 0.004, sign * depth / 2], 0).castShadow = false
     box(zone, outline, [0.038, 0.007, depth], [sign * width / 2, 0.004, 0], 0).castShadow = false

@@ -118,3 +118,10 @@ worldScene
 ## G6 — orchestration UI без второго движка
 
 Добавить слой выбора режима и типизированное read-only описание шагов ручного обучения. Vue управляет только режимом/подсказками; `Simulator` владеет фактическим состоянием приводов, грузом, стартом/стопом demo и reset сценария. `DemoSequence` остаётся единственным механизмом автоматической демонстрации. В guide состояние успеха вычисляется по фактическим значениям (actual + cargo), не по DOM-ползункам; действия гайда не подменяют команды оператора. Можно выделить Vue компоненты ModeSelection/GuidedSteps и чистые функции проверки шагов. С G5 onboarding — общий жизненный цикл слоёв без одновременных modal overlays. Не менять render loop/Three.js-геометрию. Контракт: `docs/G6_MODES_AND_GUIDE.md`.
+
+<!-- G7_REGISTERED_2026_11_21 -->
+## G7 — UI-only extension boundaries
+
+Use existing Vue UI for overlays and tour/guided cards, and existing camera controller for proper baseline recalibration. Global dim remains page-wide; dialog positions are computed relative to 3D-scene layout. Tour tooltip placement reacts to resize/scroll and spotlight bounds. Guided visual state derives from G6 actual/verified state, not DOM input targets; preserve G6 route/contextual invariants. Scenario reset ≠ camera reset ≠ stop demo. Avoid additional dependencies and Three.js model changes. Detailed contract: `docs/G7_UI_POLISH.md`.
+
+Порог раскрытия из `config/g6-route.json` применяется и на шаге отпускания, и при проверке сохранённых условий. Шаг подъёма груза использует фактический отрыв ящика от пола. Simulator запоминает высоту захвата при отпускании ящика на площадке, чтобы проверять подъём пустого захвата по разнице высот.

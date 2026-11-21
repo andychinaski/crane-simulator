@@ -75,3 +75,8 @@
 - Перенеси старые сообщения-подсказки под правые регуляторы; убери Demo/Stop из правой панели, помести действия сценария в верхний правый угол сцены. **Reset сценария и reset камеры — разные операции.**
 - Сохрани механику и маршрут G1–G4, принятый внешний вид и G5 onboarding. Выполни регрессию, приложи screenshots `evidence/G6/`.
 - **G6 — обязательная приёмка:** по итогам проверки статус `AWAITING_APPROVAL` и остановка до явного «G6 принято». G7 не начинать; без указания не делать commit/push.
+
+<!-- G7_REGISTERED_2026_11_21 -->
+## G7 — UX/UI polish (additional contract)
+
+Active G7 requirements: `docs/G7_UI_POLISH.md`; implementation plan `.agent/G7_IMPLEMENTATION.md`; references `assets/reference/g7/`. Only implement on actual G6 baseline; do not rebuild G1–G6. Keep screenshot-guided appearance, status telemetry, and fixed scenario semantics. Make live visual evidence and stop at **G7 AWAITING_APPROVAL** for owner acceptance. Never self-approve or push without instruction.
